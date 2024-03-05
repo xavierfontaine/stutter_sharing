@@ -42,10 +42,10 @@ def load_from_pickle(folder_name, file_name):
 # ====
 # Load
 # ====
-x = load_from_pickle(folder_name=DATA_FOLDER, file_name=X_FILENAME)
-y_all = load_from_pickle(folder_name=DATA_FOLDER, file_name=Y_ALL_FILENAME)
-y = load_from_pickle(folder_name=DATA_FOLDER, file_name=Y_FILENAME)
-names = load_from_pickle(folder_name=DATA_FOLDER, file_name=NAMES_FILENAME)
+x: np.ndarray = load_from_pickle(folder_name=DATA_FOLDER, file_name=X_FILENAME)
+y_all: np.ndarray = load_from_pickle(folder_name=DATA_FOLDER, file_name=Y_ALL_FILENAME)
+y: np.ndarray = load_from_pickle(folder_name=DATA_FOLDER, file_name=Y_FILENAME)
+names: np.ndarray = load_from_pickle(folder_name=DATA_FOLDER, file_name=NAMES_FILENAME)
 
 print(f"{x.shape=}, {y_all.shape=}, {y.shape=}, {names.shape=}")
 
@@ -87,6 +87,9 @@ def plot_loss_accuracy(history):
 # Data preproc
 # ============
 def preprocess_data(y: np.array, x: np.array) -> tuple:
+    # Transpose x
+    x = np.transpose(x, (0, 2, 1))
+    # Split
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=0.2, random_state=42
     )
@@ -169,8 +172,8 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     # Composing model
     model = Sequential()
     model.add(normalizer)
-    model.add(LSTM(6, activation="tanh"))
-    model.add(Dense(6, activation="relu"))
+    model.add(LSTM(32, activation="tanh"))
+    model.add(Dense(12, activation="relu"))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
     optimizer = Adam(learning_rate=1e-3)
