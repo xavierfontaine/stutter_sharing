@@ -11,6 +11,7 @@ from keras.layers import (
     AveragePooling2D,
     BatchNormalization,
     Bidirectional,
+    Conv1D,
     Conv2D,
     Dense,
     Dropout,
@@ -32,6 +33,8 @@ X_FILENAME = "mfcc_data.pkl"
 Y_ALL_FILENAME = "y_stutter_feature.pkl"
 Y_FILENAME = "y_two_reviewer.pkl"
 NAMES_FILENAME = "clip_name.pkl"
+OUTPUT_FOLDER = "models"
+OUTPUT_NAME = "experimental_model.h5"
 
 
 # =========
@@ -180,10 +183,12 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     model = Sequential()
     model.add(normalizer)
     # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=True)))
-    model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
+    model.add(Conv1D(filters=64, kernel_size=16))
+    #model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
+    model.add(LSTM(128, activation="tanh", return_sequences=False))
     model.add(Dropout(0.5))
     # model.add(TimeDistributed(Dense(20, activation="relu")))
-    model.add(Dense(12, activation="relu"))
+    model.add(Dense(128, activation="relu"))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
@@ -234,3 +239,10 @@ for c in np.unique(y_test):
     print(f"Mean predicted value when y={c}: {np.mean(y_pred[y_test==c])}")
 # Print train history
 plot_loss_accuracy(history=history)
+
+
+# ====
+# Save
+# ====
+out_path = os.path.join(OUTPUT_FOLDER, OUTPUT_NAME)
+model.save(out_path)
