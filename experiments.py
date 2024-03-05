@@ -13,9 +13,11 @@ from keras.layers import (
     Bidirectional,
     Conv2D,
     Dense,
+    Dropout,
     Flatten,
     Normalization,
     ReLU,
+    TimeDistributed,
 )
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -177,9 +179,12 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     # Composing model
     model = Sequential()
     model.add(normalizer)
-    model.add(LSTM(128, activation="tanh"))
-    # model.add(Bidirectional(LSTM(128, activation="tanh")))
+    # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=True)))
+    model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
+    model.add(Dropout(0.5))
+    # model.add(TimeDistributed(Dense(20, activation="relu")))
     model.add(Dense(12, activation="relu"))
+    model.add(Dropout(0.5))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
     optimizer = Adam(learning_rate=1e-3)
@@ -194,11 +199,11 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
 def train_model(model: Sequential, x: np.ndarray, y: np.ndarray) -> dict:
     """Returns the fit history"""
     # Get callbacks
-    es = EarlyStopping(patience=10, restore_best_weights=True, monitor="val_auc")
+    es = EarlyStopping(patience=5, restore_best_weights=True, monitor="val_auc")
     callbacks = [es]
     # Fit
     history = model.fit(
-        x=x, y=y, validation_split=0.2, epochs=10, batch_size=32, callbacks=callbacks
+        x=x, y=y, validation_split=0.2, epochs=20, batch_size=32, callbacks=callbacks
     )
     return history
 
