@@ -3,6 +3,7 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import soundfile
 from keras.callbacks import EarlyStopping
 from keras.layers import (
@@ -34,7 +35,8 @@ Y_ALL_FILENAME = "y_stutter_feature.pkl"
 Y_FILENAME = "y_two_reviewer.pkl"
 NAMES_FILENAME = "clip_name.pkl"
 OUTPUT_FOLDER = "models"
-OUTPUT_NAME = "experimental_model.h5"
+OUTPUT_NAME = "experimental_model.tf"
+SAVE: bool = False
 
 
 # =========
@@ -93,14 +95,14 @@ def plot_loss_accuracy(history):
 # ============
 # Data preproc
 # ============
-def preprocess_data(y: np.array, x: np.array) -> tuple:
+def preprocess_data(y: np.array, x: np.array, y_all: np.array) -> tuple:
     # Transpose x
     x = np.transpose(x, (0, 2, 1))
     # Split
-    x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=0.2, random_state=42
+    x_train, x_test, y_train, y_test, y_all_train, y_all_test = train_test_split(
+        x, y, y_all, test_size=0.2, random_state=42
     )
-    return x_train, x_test, y_train, y_test
+    return x_train, x_test, y_train, y_test, y_all_train, y_all_test
 
 
 # ======
@@ -184,7 +186,7 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     model.add(normalizer)
     # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=True)))
     model.add(Conv1D(filters=64, kernel_size=16))
-    #model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
+    # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
     model.add(LSTM(128, activation="tanh", return_sequences=False))
     model.add(Dropout(0.5))
     # model.add(TimeDistributed(Dense(20, activation="relu")))
@@ -217,7 +219,9 @@ def train_model(model: Sequential, x: np.ndarray, y: np.ndarray) -> dict:
 # Experiments
 # ===========
 # Split train/test
-x_train, x_test, y_train, y_test = preprocess_data(y=y, x=x)
+x_train, x_test, y_train, y_test, y_all_train, y_all_test = preprocess_data(
+    y=y, x=x, y_all=y_all
+)
 # Init and fit
 model = init_compile_simplest(x_train=x_train)
 model.summary()
@@ -237,6 +241,11 @@ print(f"Obtained accuracy: {acc}")
 # Mean etc
 for c in np.unique(y_test):
     print(f"Mean predicted value when y={c}: {np.mean(y_pred[y_test==c])}")
+# Recall for each type of stutter
+THRESH = 0.5
+y_pred_binary = (1 * (y_pred > THRESH))[:, 0]
+recalls = np.matmul(y_pred_binary, y_all_test) / np.sum(y_all_test, axis=0)
+print(f"Recall for each type of stutter: {recalls}")
 # Print train history
 plot_loss_accuracy(history=history)
 
@@ -244,5 +253,6 @@ plot_loss_accuracy(history=history)
 # ====
 # Save
 # ====
-out_path = os.path.join(OUTPUT_FOLDER, OUTPUT_NAME)
-model.save(out_path)
+if SAVE:
+    out_path = os.path.join(OUTPUT_FOLDER, OUTPUT_NAME)
+    model.save(out_path, save_format="tf")
