@@ -174,9 +174,6 @@ def init_compile_cnn(X_train: np.ndarray) -> Sequential:
     model.add(Dense(1, activation="sigmoid"))
 
 
-# TODO: add es callback
-
-
 def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     # Adapt normalization layer
     normalizer = Normalization()
@@ -185,16 +182,18 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     model = Sequential()
     model.add(normalizer)
     # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=True)))
-    model.add(Conv1D(filters=64, kernel_size=16))
+    #model.add(Conv1D(filters=64, kernel_size=16))
     # model.add(Bidirectional(LSTM(128, activation="tanh", return_sequences=False)))
     model.add(LSTM(128, activation="tanh", return_sequences=False))
     model.add(Dropout(0.5))
     # model.add(TimeDistributed(Dense(20, activation="relu")))
     model.add(Dense(128, activation="relu"))
     model.add(Dropout(0.5))
+    # model.add(Dense(64, activation="relu"))
+    # model.add(Dropout(0.75))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
-    optimizer = Adam(learning_rate=1e-3)
+    optimizer = Adam(learning_rate=1e-4)
     # Compile
     model.compile(
         optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy", "AUC"]
@@ -210,7 +209,7 @@ def train_model(model: Sequential, x: np.ndarray, y: np.ndarray) -> dict:
     callbacks = [es]
     # Fit
     history = model.fit(
-        x=x, y=y, validation_split=0.2, epochs=20, batch_size=32, callbacks=callbacks
+        x=x, y=y, validation_split=0.2, epochs=100, batch_size=32, callbacks=callbacks
     )
     return history
 
