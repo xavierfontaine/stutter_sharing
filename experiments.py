@@ -4,17 +4,18 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import soundfile
+from keras.callbacks import EarlyStopping
 from keras.layers import (
+    GRU,
     LSTM,
     AveragePooling2D,
     BatchNormalization,
+    Bidirectional,
     Conv2D,
     Dense,
     Flatten,
     Normalization,
     ReLU,
-    Bidirectional,
-    GRU,
 )
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -166,6 +167,9 @@ def init_compile_cnn(X_train: np.ndarray) -> Sequential:
     model.add(Dense(1, activation="sigmoid"))
 
 
+# TODO: add es callback
+
+
 def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     # Adapt normalization layer
     normalizer = Normalization()
@@ -174,7 +178,8 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     model = Sequential()
     model.add(normalizer)
     model.add(LSTM(128, activation="tanh"))
-    #model.add(Dense(12, activation="relu"))
+    # model.add(Bidirectional(LSTM(128, activation="tanh")))
+    model.add(Dense(12, activation="relu"))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
     optimizer = Adam(learning_rate=1e-3)
@@ -188,7 +193,13 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
 
 def train_model(model: Sequential, x: np.ndarray, y: np.ndarray) -> dict:
     """Returns the fit history"""
-    history = model.fit(x=x, y=y, validation_split=0.2, epochs=10, batch_size=32)
+    # Get callbacks
+    es = EarlyStopping(patience=10, restore_best_weights=True, monitor="val_auc")
+    callbacks = [es]
+    # Fit
+    history = model.fit(
+        x=x, y=y, validation_split=0.2, epochs=10, batch_size=32, callbacks=callbacks
+    )
     return history
 
 
@@ -216,9 +227,5 @@ print(f"Obtained accuracy: {acc}")
 # Mean etc
 for c in np.unique(y_test):
     print(f"Mean predicted value when y={c}: {np.mean(y_pred[y_test==c])}")
-    # print(f"Median predicted value when y={c}: {np.median(y_pred[y_test==c])}")
-    # print(
-    #     f"Min, max predicted value when y={c}: {np.min(y_pred[y_test==c]), np.max(y_pred[y_test==c])}"
-    # )
 # Print train history
 plot_loss_accuracy(history=history)
