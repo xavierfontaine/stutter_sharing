@@ -202,6 +202,8 @@ history = train_model(model=model, x=x_train, y=y_train)
 # ==========
 # Evaluation
 # ==========
+# Print train history
+plot_loss_accuracy(history=history)
 # Predict
 y_pred = model.predict(x_test)
 # Print accuracies
@@ -209,3 +211,10 @@ perfs = model.evaluate(x_test, y_test)
 acc = perfs[1]
 print(f"Reference accuracy: {max(np.mean(y_test), 1-np.mean(y_test))}")
 print(f"Obtained accuracy: {acc}")
+# Mean etc
+for c in np.unique(y_test):
+    print(f"Mean predicted value when y={c}: {np.mean(y_pred[y_test==c])}")
+    # print(f"Median predicted value when y={c}: {np.median(y_pred[y_test==c])}")
+    # print(
+    #     f"Min, max predicted value when y={c}: {np.min(y_pred[y_test==c]), np.max(y_pred[y_test==c])}"
+    # )
