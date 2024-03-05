@@ -11,9 +11,10 @@ from keras.layers import (
     Conv2D,
     Dense,
     Flatten,
-    Input,
     Normalization,
     ReLU,
+    Bidirectional,
+    GRU,
 )
 from keras.models import Sequential
 from keras.optimizers import Adam
@@ -172,8 +173,8 @@ def init_compile_simplest(x_train: np.ndarray) -> Sequential:
     # Composing model
     model = Sequential()
     model.add(normalizer)
-    model.add(LSTM(32, activation="tanh"))
-    model.add(Dense(12, activation="relu"))
+    model.add(LSTM(128, activation="tanh"))
+    #model.add(Dense(12, activation="relu"))
     model.add(Dense(1, activation="sigmoid"))
     # Optimizer
     optimizer = Adam(learning_rate=1e-3)
@@ -205,8 +206,6 @@ history = train_model(model=model, x=x_train, y=y_train)
 # ==========
 # Evaluation
 # ==========
-# Print train history
-plot_loss_accuracy(history=history)
 # Predict
 y_pred = model.predict(x_test)
 # Print accuracies
@@ -221,3 +220,5 @@ for c in np.unique(y_test):
     # print(
     #     f"Min, max predicted value when y={c}: {np.min(y_pred[y_test==c]), np.max(y_pred[y_test==c])}"
     # )
+# Print train history
+plot_loss_accuracy(history=history)
